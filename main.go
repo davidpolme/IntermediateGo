@@ -2,53 +2,87 @@ package main
 
 import "fmt"
 
-type Person struct {
-	name string
-	age  int
+//SMS, EMAIL
+type INotificationFactory interface {
+	SendNotification()
+	GetSender() ISender
+}
+type ISender interface {
+	GetSenderMethod() string
+	GetSenderChannel() string
 }
 
-type Employee struct {
-	id int
+type SMSNotification struct {
 }
 
-type FullTimeEmployee struct {
-	Person
-	Employee
-	endDate string
+func (SMSNotification) GetSender() ISender {
+	return SMSNotificationSender{}
 }
 
-func (ftEmployee FullTimeEmployee) getMessage() string {
-	return "Full Time Employee"
+func (SMSNotification) SendNotification() {
+	fmt.Println("Sending Notification via SMS")
 }
 
-type TemporatyEmployee struct {
-	Person
-	Employee
-	taxRate int
+type SMSNotificationSender struct {
 }
 
-func (tempEmployee TemporatyEmployee) getMessage() string {
-	return "Temporary Employee"
+func (SMSNotificationSender) GetSenderMethod() string {
+	return "SMS"
 }
 
-type PrintInfo interface {
-	getMessage() string
+func (SMSNotificationSender) GetSenderChannel() string {
+	return "Twilio"
 }
 
-func getMessage(p PrintInfo) {
-	fmt.Println(p.getMessage())
+type EmailNotification struct {
+}
+
+func (EmailNotification) SendNotification() {
+	fmt.Println("Sending Notification via Email")
+}
+
+func (EmailNotification) GetSender() ISender {
+	return EmailNotificationSender{}
+}
+
+type EmailNotificationSender struct {
+}
+
+func (EmailNotificationSender) GetSenderMethod() string {
+	return "Email"
+}
+
+func (EmailNotificationSender) GetSenderChannel() string {
+	return "yes"
+}
+
+func getNotificationFactory(notificationType string) (INotificationFactory, error) {
+	if notificationType == "SMS" {
+		return &SMSNotification{}, nil
+	}
+
+	if notificationType == "Email" {
+		return &EmailNotification{}, nil
+	}
+
+	return nil, fmt.Errorf("No notification Type")
+}
+
+func sendNotification(f INotificationFactory) {
+	f.SendNotification()
+}
+
+func getMethod(f INotificationFactory) {
+	fmt.Println(f.GetSender().GetSenderMethod())
 }
 
 func main() {
-	ftEmployee := FullTimeEmployee{}
-	ftEmployee.name = "David"
-	ftEmployee.age = 24
-	ftEmployee.id = 1
-	getMessage(ftEmployee)
+	smsFactory, _ := getNotificationFactory("SMS")
+	emailFactory, _ := getNotificationFactory("Email")
 
-	tempEmployee := TemporatyEmployee{}
-	tempEmployee.name = "Tatiana"
-	tempEmployee.age = 25
-	tempEmployee.id = 2
-	getMessage(tempEmployee)
+	sendNotification(smsFactory)
+	sendNotification(emailFactory)
+
+	getMethod(smsFactory)
+	getMethod(emailFactory)
 }
