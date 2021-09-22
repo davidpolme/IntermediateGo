@@ -1,15 +1,17 @@
 package main
 
 import (
-	nt "github.com/davidpolme/IntermediateGo/notification"
+	"fmt"
+	"time"
 )
 
 func main() {
-	//SMS || Email
-	notificationFactory, err := nt.GetNotificationFactory("Email")
-	if err != nil {
-		panic(err)
-	}
-	nt.SendNotification(notificationFactory)
-	nt.GetMethod(notificationFactory)
+	c := make(chan int)
+	go func() {
+		fmt.Println("Starting Function")
+		time.Sleep(2 * time.Second)
+		fmt.Println("End")
+		c <- 1
+	}()
+	<-c
 }
