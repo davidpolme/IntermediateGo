@@ -1,26 +1,37 @@
 package main
 
-import (
-	"fmt"
-	"sync"
-	"time"
-)
+import "fmt"
 
-func main() {
-	c := make(chan int, 1)
-	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		c <- 1
-		wg.Add(1)
-		go doSomething(i, &wg, c)
+//canal exclusivo de escritura <- a la derecha de chan
+func Generator(c chan<- int) {
+	for i := 1; i <= 10; i++ {
+		c <- i
 	}
-	wg.Wait()
+	close(c)
 }
 
-func doSomething(i int, wg *sync.WaitGroup, c chan int) {
-	defer wg.Done()
-	fmt.Printf("Id %d started\n", i)
-	time.Sleep(1 * time.Second)
-	fmt.Printf("---------------Id %d finished\n", i)
-	<-c
+//in: canal exclusivo de lectura <- a la izquierda de chan
+//out: canal exclusivo de escritura <- a la derecha de chan
+func Double(in <-chan int, out chan<- int) {
+	for value := range in {
+		out <- 2 * value
+		//in <- 1
+	}
+	close(out)
+}
+
+func PrinntValues(c chan int) {
+	for value := range c {
+		fmt.Println(value)
+	}
+}
+
+func main() {
+	generator := make(chan int)
+	doubles := make(chan int)
+
+	go Generator(generator)
+	go Double(generator, doubles)
+	PrinntValues(doubles)
+
 }
